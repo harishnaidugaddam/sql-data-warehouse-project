@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+
+  webserver:
+    image: apache/airflow:2.8.1
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: bAq1m9JgVXrcJWjmlRlywXLpvqFS4o4eGOQ4-7hdo2c=
+      AIRFLOW__WEBSERVER__SECRET_KEY: IrG-M_GTjf3CO_qm-DH0TZ37WPyh36HAvSk35ss20Ys
+      AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  scheduler:
+    image: apache/airflow:2.8.1
+    depends_on:
+      - webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: bAq1m9JgVXrcJWjmlRlywXLpvqFS4o4eGOQ4-7hdo2c=
+      AIRFLOW__WEBSERVER__SECRET_KEY: IrG-M_GTjf3CO_qm-DH0TZ37WPyh36HAvSk35ss20Ys
+      AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: scheduler
+
+volumes:
+  postgres-db-volume:
