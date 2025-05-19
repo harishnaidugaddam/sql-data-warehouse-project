@@ -42,7 +42,7 @@ Gold Layer Views      - Star schema (dim_ and fact_ views)
 Apache Superset       - Visualizations & dashboards
 ```
 
-All orchestrated using an [Airflow DAG](./dags/load_layers_dag.py), with tasks like:
+All orchestrated using an [Airflow DAG](./airflow/dags/load_layers_dag.py), with tasks like:
 
 - `load_bronze_layer`
 - `load_silver_layer`
