@@ -1,59 +1,127 @@
-# Data Warehouse and Analytics Project
+# 💾 Data Warehouse and Analytics Project
 
-This project demonstrates a comprehensive data warehousing and analytics solution, from building a data warehouse to generating actionable insights. Designed as a portfolio project, it highlights industry best practices in data engineering and analytics.
+This project demonstrates a **complete data warehousing and analytics pipeline**, from ingestion to orchestration to dashboarding. Built using industry-grade tools like **SQL Server**, **Airflow**, **Docker**, and **Superset**, this serves as a full-fledged **portfolio project** for modern data engineering.
 
 ---
 
-## 🏗️ Data Architecture
+## 🧱 Data Architecture: Medallion Model
 
-The data architecture for this project follows Medallion Architecture **Bronze**, **Silver**, and **Gold** layers:  
 ![Data Architecture](docs/data_architecture.png)
 
-1. **Bronze Layer**: Stores raw data as-is from the source systems. Data is ingested from CSV Files into SQL Server Database.
-2. **Silver Layer**: This layer includes data cleansing, standardization, and normalization processes to prepare data for analysis.
-3. **Gold Layer**: Houses business-ready data modeled into a star schema required for reporting and analytics.
+Follows the **Medallion Architecture**:
+- **Bronze**: Raw source data (CRM & ERP) ingested from `.csv` files.
+- **Silver**: Cleaned and normalized staging data using stored procedures.
+- **Gold**: Final business-ready tables exposed as **SQL Server views** following a **star schema** (dimensions & fact).
 
 ---
 
-## 📖 Project Overview
+## 🚀 Technologies Used
 
-This project involves:
+| Area              | Tool / Tech                          |
+|-------------------|---------------------------------------|
+| **ETL & Orchestration** | Apache Airflow (`2.8.1`) with DAGs |
+| **Database**       | SQL Server 2019 (`dockerized`)       |
+| **Dashboarding**   | Apache Superset                      |
+| **Containerization**| Docker + Docker Compose             |
+| **Development**    | Azure Data Studio + VS Code          |
+| **Version Control**| Git + GitHub                         |
 
-1. **Data Architecture**: Designing a Modern Data Warehouse Using Medallion Architecture **Bronze**, **Silver**, and **Gold** layers.
-2. **ETL Pipelines**: Extracting, transforming, and loading data from source systems into the warehouse.
-3. **Data Modeling**: Developing fact and dimension tables optimized for analytical queries.
-4. **Analytics & Reporting**: Creating SQL-based reports and dashboards for actionable insights.
+---
+
+## 📈 Pipeline Flow (Automated via Airflow DAG)
+
+```
+CSV Files (mounted in /data) 
+        ↓
+[bronze.load_bronze]  - Bulk insert into raw tables
+        ↓
+[silver.load_silver]  - Data cleansing, joins, transformations
+        ↓
+Gold Layer Views      - Star schema (dim_ and fact_ views)
+        ↓
+Apache Superset       - Visualizations & dashboards
+```
+
+All orchestrated using an [Airflow DAG](./dags/load_layers_dag.py), with tasks like:
+
+- `load_bronze_layer`
+- `load_silver_layer`
+- `gold_layer_info` (note: Gold layer uses pre-built views)
+
+---
+
+## 🐳 Dockerized Infrastructure
+
+Spin up the **entire stack** using Docker Compose:
+```bash
+docker-compose up -d
+```
+
+Services included:
+- `sqlserverexpress`: SQL Server 2019 with mounted CSVs
+- `airflow-webserver`, `scheduler`, `postgres`: Orchestrate ETL jobs
+- `superset`: Business dashboards (port `8088`)
+
+> ✅ Supports Apple M1/M2 (`arm64`) via Docker’s `linux/amd64` emulation
 
 ---
 
 ## 📂 Repository Structure
+
 ```
-data-warehouse-project/
+sql-data-warehouse-project/
 │
-├── datasets/                           # Raw datasets used for the project (ERP and CRM data)
+├── datasets/                     # Raw source CSVs
+├── docs/                         # Architecture diagrams, catalog, flow
+├── scripts/
+│   ├── bronze/                   # BULK INSERT procs
+│   ├── silver/                   # Transformations & cleansing logic
+│   ├── gold/                     # SQL Server views (dim_*, fact_*)
 │
-├── docs/                               # Project documentation and architecture details
-│   ├── etl.drawio                      # Draw.io file shows all different techniquies and methods of ETL
-│   ├── data_architecture.drawio        # Draw.io file shows the project's architecture
-│   ├── data_catalog.md                 # Catalog of datasets, including field descriptions and metadata
-│   ├── data_flow.drawio                # Draw.io file for the data flow diagram
-│   ├── data_models.drawio              # Draw.io file for data models (star schema)
-│   ├── naming-conventions.md           # Consistent naming guidelines for tables, columns, and files
-│
-├── scripts/                            # SQL scripts for ETL and transformations
-│   ├── bronze/                         # Scripts for extracting and loading raw data
-│   ├── silver/                         # Scripts for cleaning and transforming data
-│   ├── gold/                           # Scripts for creating analytical models
+├── airflow/                      # Docker Compose stack + configs
+│   ├── docker-compose.yml
+│   ├── dag/
 │
 ├── tests/                              # Test scripts and quality files
-│
-├── README.md                           # Project overview and instructions
-├── LICENSE                             # License information for the repository
-├── .gitignore                          # Files and directories to be ignored by Git
-└── requirements.txt                    # Dependencies and requirements for the project
+├── Superset Dashboards and Charts/                     # Dashboards & Charts
+├── .gitignore
+└── README.md                     # 📍 You're here
 ```
+
+---
+
+## 📊 Dashboards in Apache Superset
+
+Created clean, slice-driven dashboards that connect directly to the **Gold Layer** via SQL Server connection:
+
+![Dash Board](Superset_Dashboards_and_Charts/Visualization_DashBoard.jpg)
+
+- ✅ Fact-based metrics: Sales, Revenue, Quantity
+- ✅ Drill-down dimensions: Products, Customers, Time
+
+Superset runs at: [http://localhost:8088](http://localhost:8088)  
+> Default admin: `admin` / `admin` (or as configured)
+
+---
+
+## 🧪 Testing & Validation
+
+- ✔️ Row counts validated during layer transitions
+- ✔️ Gold views verified in Azure Data Studio
+- ✔️ DAG runs verified in Airflow UI with successful state tracking
+
 ---
 
 ## 🛡️ License
 
 This project is licensed under the [MIT License](LICENSE). You are free to use, modify, and share this project with proper attribution.
+
+---
+
+## 🙌 What’s Next?
+
+You can extend this project by:
+
+- 📤 Deploying to cloud (e.g., Azure VM, AWS EC2)
+- 🧪 Adding automated tests via Great Expectations or dbt
+- 📦 Integrating CI/CD for Airflow/Superset releases
