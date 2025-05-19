@@ -45,5 +45,34 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: scheduler
 
+  superset:
+    image: airflow-superset:latest
+    container_name: superset
+    environment:
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SUPERSET_SECRET_KEY: "your-secret-key"
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset_home:/app/superset_home
+    command: >
+      bash -c "
+        superset db upgrade &&
+        superset fab create-admin --username admin --firstname admin --lastname user --email admin@superset.com --password admin &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088
+      "
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserverexpress
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - ../datasets:/data  # Adjust this path to your actual CSV mount
+
 volumes:
   postgres-db-volume:
+  superset_home:
